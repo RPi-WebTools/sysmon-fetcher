@@ -1,0 +1,23 @@
+{
+  "name": "sysmon-fetcher",
+  "version": "1.0.0",
+  "description": "Gather system information and save in a db",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RPi-WebTools/sysmon-fetcher.git"
+  },
+  "author": "Viperinius",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/RPi-WebTools/sysmon-fetcher/issues"
+  },
+  "homepage": "https://github.com/RPi-WebTools/sysmon-fetcher#readme",
+  "dependencies": {
+    "sqlite3": "^4.1.1",
+    "systeminformation": "^4.23.1"
+  }
+}
