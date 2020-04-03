@@ -52,15 +52,18 @@ module.exports.initialise = function (dbName, uuids) {
         sleepFor = 2000
     }
     // wait a bit to make sure it is done creating (if newly created)
-    return sleep(sleepFor)
+    return this.sleep(sleepFor)
 }
 
 /**
  * Read new data and write it to the database
+ * @param {string} dbName Path and name of the database file
  * @param {string} mode Specifies what part should be read (e.g. cpuInfo, all, ...)
  * @param {string} uuid UUID, only needed if mode = fsHist or all
  */
-module.exports.newData = function (mode, uuid='') {
+module.exports.newData = function (dbName, mode, uuid='') {
+    let dao = new DAO(dbName)
+    let writer = new SQLiteWriter(dao)
     switch (mode) {
         case 'devInfo':
             getInfo.getDevInfo().then(data => {
