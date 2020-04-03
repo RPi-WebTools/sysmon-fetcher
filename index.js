@@ -5,15 +5,11 @@ const initDb = require('./initDb')
 const DAO = require('./dao')
 const SQLiteWriter = require('./writeData')
 
-
-const dbName = 'sysmon.db'
-
-
 /**
  * Sleep for x milliseconds
  * @param {Number} ms Milliseconds to wait
  */
-function sleep (ms) {
+module.exports.sleep = function (ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
@@ -37,22 +33,119 @@ function storeGeneric (writer, table, cols, data) {
     }
 }
 
-//----------------------------------------------------------------------------
-
-// check if database exists or needs to be created
-let sleepFor = 1
-if (!fs.existsSync('./' + dbName)) {
-    // TODO: get and supply real UUIDs here
-    initDb.initSysMonDb(dbName, ['bla', 'blub', 'bleu'])
-    sleepFor = 2000
+/**
+ * Get all UUIDs of filesystems that are currently connected
+ */
+module.exports.getCurrentUuids = function () {
+    return getInfo.getUuids()
 }
 
-// wait a bit to make sure it is done creating (if newly created)
-sleep(sleepFor).then(() => {
-    let dao = new DAO(dbName)
-    let writer = new SQLiteWriter(dao)
+/**
+ * Initialise the database with all needed tables
+ * @param {string} dbName Path and name of the database file
+ * @param {Array<string>} uuids All current UUIDs
+ */
+module.exports.initialise = function (dbName, uuids) {
+    let sleepFor = 1
+    if (!fs.existsSync(dbName)) {
+        initDb.initSysMonDb(dbName, uuids)
+        sleepFor = 2000
+    }
+    // wait a bit to make sure it is done creating (if newly created)
+    return sleep(sleepFor)
+}
 
-    getInfo.getCpuInfo().then(data => {
-        storeGeneric(writer, initDb.tableCpuInfo, initDb.getColsCpuInfo().names, data)
-    })
-})
+/**
+ * Read new data and write it to the database
+ * @param {string} mode Specifies what part should be read (e.g. cpuInfo, all, ...)
+ * @param {string} uuid UUID, only needed if mode = fsHist or all
+ */
+module.exports.newData = function (mode, uuid='') {
+    switch (mode) {
+        case 'devInfo':
+            getInfo.getDevInfo().then(data => {
+                storeGeneric(writer, initDb.tableDevInfo, initDb.getColsDevInfo().names, data)
+            })
+            break
+        case 'userInfo':
+            getInfo.getUserInfo().then(data => {
+                storeGeneric(writer, initDb.tableUserInfo, initDb.getColsUserInfo().names, data)
+            })
+            break
+        case 'netInfo':
+            getInfo.getNetInfo().then(data => {
+                storeGeneric(writer, initDb.tableNetInfo, initDb.getColsNetInfo().names, data)
+            })
+            break
+        case 'cpuInfo':
+            getInfo.getCpuInfo().then(data => {
+                storeGeneric(writer, initDb.tableCpuInfo, initDb.getColsCpuInfo().names, data)
+            })
+            break
+        case 'cpuTemp':
+            getInfo.getCpuTemp().then(data => {
+                storeGeneric(writer, initDb.tableCpuTemp, initDb.getColsCpuTemp().names, data)
+            })
+            break
+        case 'memInfo':
+            getInfo.getMemInfo().then(data => {
+                storeGeneric(writer, initDb.tableMemInfo, initDb.getColsMemInfo().names, data)
+            })
+            break
+        case 'fsInfo':
+            getInfo.getFsInfo().then(data => {
+                storeGeneric(writer, initDb.tableFsInfo, initDb.getColsFsInfo().names, data)
+            })
+            break
+        case 'fsIoHist':
+            getInfo.getFsIoHist().then(data => {
+                storeGeneric(writer, initDb.tableFsIoHist, initDb.getColsFsIoHist().names, data)
+            })
+            break
+        case 'fsHist':
+            if (uuid === '') break
+            getInfo.getFsHist(uuid).then(data => {
+                storeGeneric(
+                    writer,
+                    initDb.tableFsHistTemplate.replace('?', uuid),
+                    initDb.getColsFsHist().names,
+                    data
+                )
+            })
+            break
+        case 'all':
+            getInfo.getDevInfo().then(data => {
+                storeGeneric(writer, initDb.tableDevInfo, initDb.getColsDevInfo().names, data)
+            })
+            getInfo.getUserInfo().then(data => {
+                storeGeneric(writer, initDb.tableUserInfo, initDb.getColsUserInfo().names, data)
+            })
+            getInfo.getNetInfo().then(data => {
+                storeGeneric(writer, initDb.tableNetInfo, initDb.getColsNetInfo().names, data)
+            })
+            getInfo.getCpuInfo().then(data => {
+                storeGeneric(writer, initDb.tableCpuInfo, initDb.getColsCpuInfo().names, data)
+            })
+            getInfo.getCpuTemp().then(data => {
+                storeGeneric(writer, initDb.tableCpuTemp, initDb.getColsCpuTemp().names, data)
+            })
+            getInfo.getMemInfo().then(data => {
+                storeGeneric(writer, initDb.tableMemInfo, initDb.getColsMemInfo().names, data)
+            })
+            getInfo.getFsInfo().then(data => {
+                storeGeneric(writer, initDb.tableFsInfo, initDb.getColsFsInfo().names, data)
+            })
+            if (uuid === '' || !Array.isArray(uuid)) break
+            getInfo.getFsHist(uuid).then(data => {
+                storeGeneric(
+                    writer,
+                    initDb.tableFsHistTemplate.replace('?', uuid),
+                    initDb.getColsFsHist().names,
+                    data
+                )
+            })
+            break
+        default:
+            break
+    }
+}

@@ -12,6 +12,21 @@ function getTime () {
 }
 
 /**
+ * Get all current UUIDs
+ */
+module.exports.getUuids = function () {
+    return new Promise((resolve, reject) => {
+        let result = []
+        si.blockDevices().then(data => {
+            data.forEach(element => {
+                result.push(element.uuid)
+            })
+            return result
+        })
+    })
+}
+
+/**
  * Get device information
  */
 module.exports.getDevInfo = function () {
