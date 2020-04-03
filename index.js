@@ -139,13 +139,15 @@ module.exports.newData = function (dbName, mode, uuid='') {
                 storeGeneric(writer, initDb.tableFsInfo, initDb.getColsFsInfo().names, data)
             })
             if (uuid === '' || !Array.isArray(uuid)) break
-            getInfo.getFsHist(uuid).then(data => {
-                storeGeneric(
-                    writer,
-                    initDb.tableFsHistTemplate.replace('?', uuid),
-                    initDb.getColsFsHist().names,
-                    data
-                )
+            uuid.forEach(single => {
+                getInfo.getFsHist(single).then(data => {
+                    storeGeneric(
+                        writer,
+                        initDb.tableFsHistTemplate.replace('?', single),
+                        initDb.getColsFsHist().names,
+                        data
+                    )
+                })
             })
             break
         default:
