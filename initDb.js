@@ -1,5 +1,5 @@
-const DAO = require('./dao')
-const SQLiteWriter = require('./writeData')
+const DAO = require('./DBmngr/dao')
+const SQLiteWriter = require('./DBmngr/sqliteWriter')
 
 /**
  * Name of the devInfo table
@@ -57,7 +57,7 @@ module.exports.tableDocker = 'docker'
  * @param {Array<string>} uuids UUIDs of the filesystems that should have tables
  */
 module.exports.initSysMonDb = function (dbName, uuids) {
-    let dao = new DAO(dbName)
+    let dao = new DAO(dbName, 'CW')
     let writer = new SQLiteWriter(dao)
     writer.setWalMode()
 

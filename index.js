@@ -2,8 +2,8 @@ const fs = require('fs')
 
 const getInfo = require('./getInfo')
 const initDb = require('./initDb')
-const DAO = require('./dao')
-const SQLiteWriter = require('./writeData')
+const DAO = require('./DBmngr/dao')
+const SQLiteWriter = require('./DBmngr/sqliteWriter')
 
 /**
  * Sleep for x milliseconds
@@ -59,10 +59,10 @@ module.exports.initialise = function (dbName, uuids) {
  * Read new data and write it to the database
  * @param {string} dbName Path and name of the database file
  * @param {string} mode Specifies what part should be read (e.g. cpuInfo, all, ...)
- * @param {string} uuid UUID, only needed if mode = fsHist or all
+ * @param {string|Array<string>} uuid UUID, only needed if mode = fsHist or all
  */
 module.exports.newData = function (dbName, mode, uuid='') {
-    let dao = new DAO(dbName)
+    let dao = new DAO(dbName, 'CW')
     let writer = new SQLiteWriter(dao)
     switch (mode) {
         case 'devInfo':
@@ -153,4 +153,5 @@ module.exports.newData = function (dbName, mode, uuid='') {
         default:
             break
     }
+    writer.closeDb()
 }
