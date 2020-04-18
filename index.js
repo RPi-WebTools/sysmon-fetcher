@@ -15,12 +15,13 @@ module.exports.sleep = function (ms) {
 
 /**
  * Store given information in the database
- * @param {SQLiteWriter} writer Database writer to use
+ * @param {string} dbName Path and name of the database file
  * @param {string} table Table name
  * @param {Array<string>} cols Names of the table columns
  * @param {Array|Object} data Data to write
  */
-function storeGeneric (writer, table, cols, data) {
+function storeGeneric (dbName, table, cols, data) {
+    let writer = new SQLiteWriter(new DAO(dbName, 'CW'))
     if (Array.isArray(data)) {
         let dataToWrite = []
         data.forEach(element => {
@@ -31,6 +32,7 @@ function storeGeneric (writer, table, cols, data) {
     else {
         writer.insertRow(table, cols, Object.values(data))
     }
+    writer.closeDb()
 }
 
 /**
@@ -62,54 +64,52 @@ module.exports.initialise = function (dbName, uuids) {
  * @param {string|Array<string>} uuid UUID, only needed if mode = fsHist or all
  */
 module.exports.newData = function (dbName, mode, uuid='') {
-    let dao = new DAO(dbName, 'CW')
-    let writer = new SQLiteWriter(dao)
     switch (mode) {
         case 'devInfo':
             getInfo.getDevInfo().then(data => {
-                storeGeneric(writer, initDb.tableDevInfo, initDb.getColsDevInfo().names, data)
+                storeGeneric(dbName, initDb.tableDevInfo, initDb.getColsDevInfo().names, data)
             })
             break
         case 'userInfo':
             getInfo.getUserInfo().then(data => {
-                storeGeneric(writer, initDb.tableUserInfo, initDb.getColsUserInfo().names, data)
+                storeGeneric(dbName, initDb.tableUserInfo, initDb.getColsUserInfo().names, data)
             })
             break
         case 'netInfo':
             getInfo.getNetInfo().then(data => {
-                storeGeneric(writer, initDb.tableNetInfo, initDb.getColsNetInfo().names, data)
+                storeGeneric(dbName, initDb.tableNetInfo, initDb.getColsNetInfo().names, data)
             })
             break
         case 'cpuInfo':
             getInfo.getCpuInfo().then(data => {
-                storeGeneric(writer, initDb.tableCpuInfo, initDb.getColsCpuInfo().names, data)
+                storeGeneric(dbName, initDb.tableCpuInfo, initDb.getColsCpuInfo().names, data)
             })
             break
         case 'cpuTemp':
             getInfo.getCpuTemp().then(data => {
-                storeGeneric(writer, initDb.tableCpuTemp, initDb.getColsCpuTemp().names, data)
+                storeGeneric(dbName, initDb.tableCpuTemp, initDb.getColsCpuTemp().names, data)
             })
             break
         case 'memInfo':
             getInfo.getMemInfo().then(data => {
-                storeGeneric(writer, initDb.tableMemInfo, initDb.getColsMemInfo().names, data)
+                storeGeneric(dbName, initDb.tableMemInfo, initDb.getColsMemInfo().names, data)
             })
             break
         case 'fsInfo':
             getInfo.getFsInfo().then(data => {
-                storeGeneric(writer, initDb.tableFsInfo, initDb.getColsFsInfo().names, data)
+                storeGeneric(dbName, initDb.tableFsInfo, initDb.getColsFsInfo().names, data)
             })
             break
         case 'fsIoHist':
             getInfo.getFsIoHist().then(data => {
-                storeGeneric(writer, initDb.tableFsIoHist, initDb.getColsFsIoHist().names, data)
+                storeGeneric(dbName, initDb.tableFsIoHist, initDb.getColsFsIoHist().names, data)
             })
             break
         case 'fsHist':
             if (uuid === '') break
             getInfo.getFsHist(uuid).then(data => {
                 storeGeneric(
-                    writer,
+                    dbName,
                     initDb.tableFsHistTemplate.replace('?', uuid),
                     initDb.getColsFsHist().names,
                     data
@@ -118,31 +118,31 @@ module.exports.newData = function (dbName, mode, uuid='') {
             break
         case 'all':
             getInfo.getDevInfo().then(data => {
-                storeGeneric(writer, initDb.tableDevInfo, initDb.getColsDevInfo().names, data)
+                storeGeneric(dbName, initDb.tableDevInfo, initDb.getColsDevInfo().names, data)
             })
             getInfo.getUserInfo().then(data => {
-                storeGeneric(writer, initDb.tableUserInfo, initDb.getColsUserInfo().names, data)
+                storeGeneric(dbName, initDb.tableUserInfo, initDb.getColsUserInfo().names, data)
             })
             getInfo.getNetInfo().then(data => {
-                storeGeneric(writer, initDb.tableNetInfo, initDb.getColsNetInfo().names, data)
+                storeGeneric(dbName, initDb.tableNetInfo, initDb.getColsNetInfo().names, data)
             })
             getInfo.getCpuInfo().then(data => {
-                storeGeneric(writer, initDb.tableCpuInfo, initDb.getColsCpuInfo().names, data)
+                storeGeneric(dbName, initDb.tableCpuInfo, initDb.getColsCpuInfo().names, data)
             })
             getInfo.getCpuTemp().then(data => {
-                storeGeneric(writer, initDb.tableCpuTemp, initDb.getColsCpuTemp().names, data)
+                storeGeneric(dbName, initDb.tableCpuTemp, initDb.getColsCpuTemp().names, data)
             })
             getInfo.getMemInfo().then(data => {
-                storeGeneric(writer, initDb.tableMemInfo, initDb.getColsMemInfo().names, data)
+                storeGeneric(dbName, initDb.tableMemInfo, initDb.getColsMemInfo().names, data)
             })
             getInfo.getFsInfo().then(data => {
-                storeGeneric(writer, initDb.tableFsInfo, initDb.getColsFsInfo().names, data)
+                storeGeneric(dbName, initDb.tableFsInfo, initDb.getColsFsInfo().names, data)
             })
             if (uuid === '' || !Array.isArray(uuid)) break
             uuid.forEach(single => {
                 getInfo.getFsHist(single).then(data => {
                     storeGeneric(
-                        writer,
+                        dbName,
                         initDb.tableFsHistTemplate.replace('?', single),
                         initDb.getColsFsHist().names,
                         data
@@ -153,5 +153,4 @@ module.exports.newData = function (dbName, mode, uuid='') {
         default:
             break
     }
-    writer.closeDb()
 }
