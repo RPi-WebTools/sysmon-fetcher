@@ -294,11 +294,13 @@ module.exports.getFsHist = function (uuid) {
                 return si.diskLayout()
             }).then(data => {
                 let layout = data.find(x => x.device === ('/dev/' + temp.blk.name.replace(/\d+$/, '')))
-                temp.smart = layout.smartStatus
+                if (layout) temp.smart = layout.smartStatus
+                else temp.smart = ''
                 return si.fsSize()
             }).then(data => {
                 let sizeItem = data.find(x => x.fs === ('/dev/' + temp.blk.name))
-                temp.used = sizeItem.use
+                if (sizeItem) temp.used = sizeItem.use
+                else temp.used = -1
                 return {
                     timestamp: time.current,
                     used: temp.used,
